@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>請求書メーカー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -21,9 +22,12 @@
     --sub:#6b6f61;
     --shell:#eef0e6;
   }
+  html{ overflow-x:hidden; width:100%; }
   *{box-sizing:border-box;}
   body{
     margin:0;
+    overflow-x:hidden;
+    max-width:100vw;
     font-family:'Zen Kaku Gothic New', sans-serif;
     background:var(--shell);
     color:var(--ink);
@@ -153,14 +157,18 @@
   }
   .items-table td{ padding:4px 6px; vertical-align:top; }
   .items-table input, .items-table select{
-    padding:7px 8px; font-size:13.5px;
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+    padding:7px 6px;
+    font-size:13.5px;
   }
-  .col-name{ width:32%; }
-  .col-qty{ width:12%; }
-  .col-unit{ width:12%; }
-  .col-price{ width:18%; }
-  .col-tax{ width:16%; }
-  .col-del{ width:12%; text-align:center; white-space:nowrap; }
+  .col-name{ width:28%; }
+  .col-qty{ width:10%; }
+  .col-unit{ width:10%; }
+  .col-price{ width:16%; }
+  .col-tax{ width:22%; }
+  .col-del{ width:10%; text-align:center; white-space:nowrap; }
   .btn-del-row{
     all:unset; cursor:pointer; color:var(--clay);
     font-size:18px; line-height:1; padding:6px;
@@ -227,10 +235,10 @@
   .inv-top{ display:flex; justify-content:space-between; margin-bottom:22px; gap:20px; }
   .inv-to{ font-size:16px; }
   .inv-to .name{ font-size:18px; font-weight:700; border-bottom:1.5px solid var(--ink); display:inline-block; padding-bottom:3px; margin-bottom:6px;}
-  .inv-meta{ text-align:right; font-size:12.5px; color:var(--sub); line-height:1.9; }
+  .inv-meta{ text-align:right; font-size:13px; color:var(--sub); line-height:2; }
   .inv-meta b{ color:var(--ink); }
   .inv-from{
-    text-align:right; font-size:12.5px; margin-bottom:20px; line-height:1.7; color:var(--ink);
+    text-align:right; font-size:13px; margin-bottom:20px; line-height:1.9; color:var(--ink);
   }
   .inv-from .shopname{ font-size:15px; font-weight:700; font-family:'Shippori Mincho', serif; }
   .inv-lede{ margin:20px 0 6px; font-size:13.5px; }
@@ -238,28 +246,28 @@
     display:inline-block; border:2px solid var(--moss-dark); padding:8px 18px; margin:6px 0 20px;
     font-size:20px; font-weight:700; color:var(--moss-dark);
   }
-  table.inv-items{ width:100%; border-collapse:collapse; margin-bottom:16px; font-size:13px; }
+  table.inv-items{ width:100%; border-collapse:collapse; margin-bottom:16px; font-size:14px; line-height:1.5; }
   table.inv-items th{
     background:var(--moss-dark); color:#fff; font-weight:500;
-    padding:8px 8px; text-align:left; font-size:12px;
+    padding:9px 8px; text-align:left; font-size:12.5px; letter-spacing:.02em;
   }
-  table.inv-items td{ padding:7px 8px; border-bottom:1px solid var(--paper-line); }
+  table.inv-items td{ padding:9px 8px; border-bottom:1px solid var(--paper-line); }
   table.inv-items td.num, table.inv-items th.num{ text-align:right; font-variant-numeric:tabular-nums; }
   .inv-summary{ display:flex; justify-content:flex-end; margin-bottom:18px; }
-  .inv-summary table{ font-size:13px; border-collapse:collapse; }
-  .inv-summary td{ padding:4px 10px; font-variant-numeric:tabular-nums; }
+  .inv-summary table{ font-size:14px; border-collapse:collapse; }
+  .inv-summary td{ padding:6px 10px; font-variant-numeric:tabular-nums; }
   .inv-summary tr.grand td{ font-weight:700; font-size:16px; border-top:2px solid var(--ink); padding-top:8px; }
   .inv-summary td.label{ color:var(--sub); text-align:right; }
   .inv-summary td.val{ text-align:right; min-width:110px; }
   .inv-bank{
-    font-size:12.5px; background:#f1efe4; border:1px solid var(--paper-line);
-    padding:12px 14px; border-radius:4px; line-height:1.8; margin-bottom:14px;
+    font-size:13px; background:#f1efe4; border:1px solid var(--paper-line);
+    padding:14px 16px; border-radius:4px; line-height:2; margin-bottom:14px;
   }
-  .inv-bank b{ display:block; font-size:12px; color:var(--sub); margin-bottom:4px; font-weight:500;}
-  .inv-memo{ font-size:12px; color:var(--sub); white-space:pre-wrap; line-height:1.7; }
+  .inv-bank b{ display:block; font-size:12.5px; color:var(--sub); margin-bottom:5px; font-weight:500;}
+  .inv-memo{ font-size:12.5px; color:var(--sub); white-space:pre-wrap; line-height:1.8; }
   .inv-regno{ font-size:11px; color:var(--sub); text-align:right; margin-top:-6px; margin-bottom:10px;}
   .seal-wrap{ display:flex; justify-content:flex-end; margin:-10px 0 10px; }
-  .seal-wrap img{ width:64px; height:64px; opacity:.85; }
+  .seal-wrap img{ width:64px; height:64px; object-fit:contain; opacity:.85; }
 
   /* ---------- 履歴 ---------- */
   .history-list{ display:flex; flex-direction:column; gap:10px; }
@@ -409,21 +417,15 @@
 
           <div class="card">
             <h2>明細</h2>
-            <div class="field" style="max-width:260px;">
-              <label>単価の入力方法</label>
-              <select id="priceMode">
-                <option value="excl">税抜（本体価格）で入力</option>
-                <option value="incl">税込で入力</option>
-              </select>
-            </div>
+            <p class="hint" style="margin-top:0;">品目ごとに「税抜(本体価格)」「税込」を選んで入力できます。混在してもOKです。</p>
             <table class="items-table">
               <thead>
                 <tr>
                   <th class="col-name">品目</th>
                   <th class="col-qty">数量</th>
                   <th class="col-unit">単位</th>
-                  <th class="col-price" id="th-price-input">単価(税抜)</th>
-                  <th class="col-tax">税率</th>
+                  <th class="col-price">単価</th>
+                  <th class="col-tax">税率・区分</th>
                   <th class="col-del"></th>
                 </tr>
               </thead>
@@ -523,10 +525,12 @@
           <div class="field"><label>単位</label><input type="text" id="newProdUnit" placeholder="個/kg"></div>
           <div class="field"><label>単価</label><input type="number" id="newProdPrice" min="0" step="1"></div>
           <div class="field">
-            <label>税率</label>
+            <label>税率・区分</label>
             <select id="newProdTax">
-              <option value="8">8%(軽減)</option>
-              <option value="10">10%</option>
+              <option value="8-excl">8%(税抜)</option>
+              <option value="8-incl">8%(税込)</option>
+              <option value="10-excl">10%(税抜)</option>
+              <option value="10-incl">10%(税込)</option>
             </select>
           </div>
         </div>
@@ -558,10 +562,10 @@
         </div>
         <div class="hint">未登録・免税事業者の場合は空欄のままでOK。空欄なら請求書に表示されません。</div>
         <div class="field" style="max-width:280px;">
-          <label>単価の既定入力方式(新規作成時)</label>
+          <label>品目を追加した時の既定の税区分</label>
           <select id="s_priceMode">
-            <option value="excl">税抜（本体価格）で入力</option>
-            <option value="incl">税込で入力</option>
+            <option value="excl">税抜（本体価格）</option>
+            <option value="incl">税込</option>
           </select>
         </div>
       </div>
@@ -599,6 +603,19 @@
         <button class="btn btn-primary" id="saveSettingsBtn">💾 設定を保存</button>
       </div>
       <div class="save-msg" id="settingsSaveMsg"></div>
+
+      <div class="card" style="max-width:640px;">
+        <h2>データのバックアップ</h2>
+        <p class="hint" style="margin-top:0;">発行者設定・宛先帳・商品帳・履歴を、まとめて1つのファイルに書き出し／読み込みできます。機種変更や複数端末での共有にお使いください。</p>
+        <div class="btn-row">
+          <button class="btn btn-harvest" id="exportDataBtn" type="button">⬇️ バックアップを書き出す</button>
+          <label class="btn btn-outline" style="cursor:pointer;">
+            📤 バックアップを読み込む
+            <input type="file" id="importDataFile" accept="application/json" style="display:none;">
+          </label>
+        </div>
+        <div class="save-msg" id="dataIoMsg"></div>
+      </div>
     </section>
 
     <!-- ========== 履歴 ========== -->
@@ -725,17 +742,19 @@
 
   // ---------- 明細行 ----------
   function addItemRow(data){
-    data = data || {name:"", qty:1, unit:"", price:0, tax:8};
+    data = data || {name:"", qty:1, unit:"", price:0, tax:8, mode:"excl"};
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="col-name" data-label="品目"><input type="text" class="it-name" list="itemDatalist" value="${escapeAttr(data.name)}" placeholder="例）米粉"></td>
       <td class="col-qty" data-label="数量"><input type="number" class="it-qty" value="${data.qty}" min="0" step="1"></td>
       <td class="col-unit" data-label="単位"><input type="text" class="it-unit" value="${escapeAttr(data.unit)}" placeholder="個/kg"></td>
       <td class="col-price" data-label="単価"><input type="number" class="it-price" value="${data.price}" min="0" step="1"></td>
-      <td class="col-tax" data-label="税率">
-        <select class="it-tax">
-          <option value="8" ${data.tax==8?"selected":""}>8%(軽減)</option>
-          <option value="10" ${data.tax==10?"selected":""}>10%</option>
+      <td class="col-tax" data-label="税率・区分">
+        <select class="it-taxmode">
+          <option value="8-excl" ${data.tax==8&&data.mode!=='incl'?"selected":""}>8%(税抜)</option>
+          <option value="8-incl" ${data.tax==8&&data.mode==='incl'?"selected":""}>8%(税込)</option>
+          <option value="10-excl" ${data.tax==10&&data.mode!=='incl'?"selected":""}>10%(税抜)</option>
+          <option value="10-incl" ${data.tax==10&&data.mode==='incl'?"selected":""}>10%(税込)</option>
         </select>
       </td>
       <td class="col-del">
@@ -753,7 +772,7 @@
       if(product){
         tr.querySelector(".it-unit").value = product.unit || "";
         tr.querySelector(".it-price").value = product.price || 0;
-        tr.querySelector(".it-tax").value = product.tax || 8;
+        tr.querySelector(".it-taxmode").value = `${product.tax||8}-${product.mode||"excl"}`;
         renderPreview();
       }
     });
@@ -763,11 +782,13 @@
         alert("品目名を入力してから登録してください。");
         return;
       }
+      const [taxVal, modeVal] = tr.querySelector(".it-taxmode").value.split("-");
       const product = {
         name,
         unit: tr.querySelector(".it-unit").value.trim(),
         price: parseFloat(tr.querySelector(".it-price").value) || 0,
-        tax: parseInt(tr.querySelector(".it-tax").value)
+        tax: parseInt(taxVal),
+        mode: modeVal
       };
       const added = addProduct(product);
       const msg = document.getElementById("saveMsg");
@@ -785,16 +806,23 @@
     return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 
-  document.getElementById("addRowBtn").addEventListener("click", ()=>addItemRow());
+  document.getElementById("addRowBtn").addEventListener("click", ()=>{
+    const s = loadSettings();
+    addItemRow({name:"", qty:1, unit:"", price:0, tax:8, mode: s.priceMode || "excl"});
+  });
 
   function getItems(){
-    return Array.from(document.querySelectorAll("#itemsBody tr")).map(tr=>({
-      name: tr.querySelector(".it-name").value.trim(),
-      qty: parseFloat(tr.querySelector(".it-qty").value) || 0,
-      unit: tr.querySelector(".it-unit").value.trim(),
-      price: parseFloat(tr.querySelector(".it-price").value) || 0,
-      tax: parseInt(tr.querySelector(".it-tax").value)
-    }));
+    return Array.from(document.querySelectorAll("#itemsBody tr")).map(tr=>{
+      const [taxVal, modeVal] = tr.querySelector(".it-taxmode").value.split("-");
+      return {
+        name: tr.querySelector(".it-name").value.trim(),
+        qty: parseFloat(tr.querySelector(".it-qty").value) || 0,
+        unit: tr.querySelector(".it-unit").value.trim(),
+        price: parseFloat(tr.querySelector(".it-price").value) || 0,
+        tax: parseInt(taxVal),
+        mode: modeVal
+      };
+    });
   }
 
   // ---------- 請求書番号の自動採番 ----------
@@ -805,18 +833,6 @@
     const seq = (todays.length + 1).toString().padStart(2,"0");
     return `${today}-${seq}`;
   }
-
-  function updatePriceModeLabels(){
-    const mode = document.getElementById("priceMode").value;
-    const isIncl = mode === "incl";
-    document.getElementById("th-price-input").textContent = isIncl ? "単価(税込)" : "単価(税抜)";
-    document.getElementById("th-price-preview").textContent = isIncl ? "単価(税込)" : "単価(税抜)";
-    document.getElementById("th-amount-preview").textContent = isIncl ? "金額(税込)" : "金額(税抜)";
-  }
-  document.getElementById("priceMode").addEventListener("change", ()=>{
-    updatePriceModeLabels();
-    renderPreview();
-  });
 
   // ---------- プレビュー描画 ----------
   function renderPreview(){
@@ -829,8 +845,6 @@
     const lede = document.getElementById("lede").value.trim();
     const memo = document.getElementById("memo").value.trim();
     const items = getItems();
-    const priceMode = document.getElementById("priceMode").value; // 'excl' or 'incl'
-    const isIncl = priceMode === "incl";
 
     document.getElementById("pv-client").textContent = client ? (client) : "相手先名";
     document.getElementById("pv-invno").textContent = invNo || "—";
@@ -850,44 +864,36 @@
 
     document.getElementById("pv-regno").textContent = s.regno ? ("登録番号："+s.regno) : "";
 
-    // 明細＆集計
+    // 明細＆集計（品目ごとに税抜/税込が混在してもよい）
     const tbody = document.getElementById("pv-itemsbody");
     tbody.innerHTML = "";
-    const taxGroups = {}; // rate -> subtotal
+    const taxGroups = {}; // rate -> 税抜換算の小計(丸め前)
     TAX_RATES.forEach(r=>taxGroups[r]=0);
 
     items.forEach(it=>{
       if(!it.name && !it.qty && !it.price) return;
-      const amount = it.qty * it.price;
-      taxGroups[it.tax] = (taxGroups[it.tax]||0) + amount;
+      const rawAmount = it.qty * it.price; // 入力方式のままの行金額
+      const netAmount = it.mode === "incl" ? (rawAmount / (1 + it.tax/100)) : rawAmount; // 税抜換算
+      taxGroups[it.tax] = (taxGroups[it.tax]||0) + netAmount;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${escapeHtml(it.name)}</td>
         <td class="num">${it.qty}${it.unit?escapeHtml(it.unit):""}</td>
-        <td class="num">${yen(it.price)}</td>
+        <td class="num">${yen(it.price)}${it.mode==="incl" ? '<br><span style="font-size:10px;color:var(--sub);">(税込)</span>' : ""}</td>
         <td class="num">${it.tax}%</td>
-        <td class="num">${yen(amount)}</td>
+        <td class="num">${yen(netAmount)}</td>
       `;
       tbody.appendChild(tr);
     });
 
-    // 税率ごとに1回だけ端数処理
+    // 税率ごとに1回だけ端数処理(税抜換算後の小計をもとに計算)
     let grandTotal = 0;
     const summaryRows = [];
     TAX_RATES.forEach(rate=>{
-      const groupAmount = taxGroups[rate] || 0;
-      if(groupAmount <= 0) return;
-      let subtotal, tax;
-      if(isIncl){
-        // 税込金額から消費税額を逆算(税率ごとに1回丸め)
-        tax = Math.round(groupAmount * rate / (100 + rate));
-        subtotal = groupAmount - tax;
-        grandTotal += groupAmount;
-      }else{
-        subtotal = groupAmount;
-        tax = Math.round(subtotal * rate / 100);
-        grandTotal += subtotal + tax;
-      }
+      const subtotal = Math.round(taxGroups[rate] || 0);
+      if(subtotal <= 0) return;
+      const tax = Math.round(subtotal * rate / 100);
+      grandTotal += subtotal + tax;
       summaryRows.push(`<tr><td class="label">${rate}%対象 小計(税抜)</td><td class="val">${yen(subtotal)}</td></tr>`);
       summaryRows.push(`<tr><td class="label">消費税(${rate}%)</td><td class="val">${yen(tax)}</td></tr>`);
     });
@@ -910,7 +916,7 @@
     // 備考
     document.getElementById("pv-memo").textContent = memo || "";
 
-    return {client, invNo, issue, due, subject, lede, memo, items, grandTotal, priceMode};
+    return {client, invNo, issue, due, subject, lede, memo, items, grandTotal};
   }
 
   // 入力欄の変更監視
@@ -957,7 +963,7 @@
       div.innerHTML = `
         <div class="hi-main">
           <b>${escapeHtml(p.name)}</b>
-          <div>${yen(p.price)}${p.unit?escapeHtml(" / "+p.unit):""}　税率${p.tax}%</div>
+          <div>${yen(p.price)}${p.mode==="incl"?"(税込)":"(税抜)"}${p.unit?escapeHtml(" / "+p.unit):""}　税率${p.tax}%</div>
         </div>
         <div class="hi-actions">
           <button class="btn-outline" data-act="del" style="color:#a8482f;border-color:#a8482f;">削除</button>
@@ -980,11 +986,13 @@
       alert("品目名を入力してください。");
       return;
     }
+    const [taxVal, modeVal] = document.getElementById("newProdTax").value.split("-");
     addProduct({
       name,
       unit: document.getElementById("newProdUnit").value.trim(),
       price: parseFloat(document.getElementById("newProdPrice").value) || 0,
-      tax: parseInt(document.getElementById("newProdTax").value)
+      tax: parseInt(taxVal),
+      mode: modeVal
     });
     document.getElementById("newProdName").value = "";
     document.getElementById("newProdUnit").value = "";
@@ -1089,7 +1097,6 @@
       lede: data.lede,
       memo: data.memo,
       items: data.items,
-      priceMode: data.priceMode,
       grandTotal: data.grandTotal,
       savedAt: new Date().toISOString()
     };
@@ -1155,10 +1162,8 @@
     document.getElementById("subject").value = inv.subject || "";
     document.getElementById("lede").value = inv.lede || "上記の通りご請求申し上げます。";
     document.getElementById("memo").value = inv.memo || "";
-    document.getElementById("priceMode").value = inv.priceMode || "excl";
-    updatePriceModeLabels();
     document.getElementById("itemsBody").innerHTML = "";
-    (inv.items && inv.items.length ? inv.items : [{name:"",qty:1,unit:"",price:0,tax:8}]).forEach(addItemRow);
+    (inv.items && inv.items.length ? inv.items : [{name:"",qty:1,unit:"",price:0,tax:8,mode:"excl"}]).forEach(addItemRow);
     renderPreview();
   }
 
@@ -1194,15 +1199,83 @@
     }
   });
 
+  // ---------- データのバックアップ(エクスポート/インポート) ----------
+  function todayCompact(){ return todayStr().replace(/-/g,""); }
+
+  document.getElementById("exportDataBtn").addEventListener("click", ()=>{
+    const backup = {
+      _app: "invoice-app",
+      _version: 1,
+      exportedAt: new Date().toISOString(),
+      settings: loadSettings(),
+      clients: loadClients(),
+      products: loadProducts(),
+      history: loadHistory()
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `請求書アプリ_バックアップ_${todayCompact()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    const msg = document.getElementById("dataIoMsg");
+    msg.textContent = "バックアップを書き出しました。";
+    setTimeout(()=>msg.textContent="", 2500);
+  });
+
+  document.getElementById("importDataFile").addEventListener("change", (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const msg = document.getElementById("dataIoMsg");
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      let data;
+      try{
+        data = JSON.parse(reader.result);
+      }catch(err){
+        alert("ファイルの読み込みに失敗しました。正しいバックアップファイルか確認してください。");
+        e.target.value = "";
+        return;
+      }
+      if(!data || (!data.settings && !data.clients && !data.products && !data.history)){
+        alert("このファイルには請求書アプリのバックアップデータが見つかりませんでした。");
+        e.target.value = "";
+        return;
+      }
+      if(!confirm("現在この端末に保存されている設定・宛先帳・商品帳・履歴は、読み込んだ内容で上書きされます。よろしいですか？")){
+        e.target.value = "";
+        return;
+      }
+      if(data.settings) saveSettingsToStorage(data.settings);
+      if(data.clients) saveClients(data.clients);
+      if(data.products) saveProducts(data.products);
+      if(data.history) saveHistory(data.history);
+
+      fillSettingsForm(loadSettings());
+      renderClientDatalist();
+      renderItemDatalist();
+      renderClientList();
+      renderProductList();
+      renderHistoryList();
+      renderPreview();
+
+      msg.textContent = "バックアップを読み込みました。";
+      setTimeout(()=>msg.textContent="", 3000);
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
   // ---------- 初期化 ----------
   function init(){
     const s = loadSettings();
     fillSettingsForm(s);
     document.getElementById("issueDate").value = todayStr();
     document.getElementById("invoiceNo").value = suggestInvoiceNo();
-    document.getElementById("priceMode").value = s.priceMode || "excl";
-    updatePriceModeLabels();
-    addItemRow();
+    addItemRow({name:"", qty:1, unit:"", price:0, tax:8, mode: s.priceMode || "excl"});
     renderPreview();
     renderClientDatalist();
     renderItemDatalist();
