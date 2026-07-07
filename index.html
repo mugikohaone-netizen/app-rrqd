@@ -354,6 +354,7 @@
   @media print{
     @page{ size: A4; margin: 12mm; }
     .nav, .panel-grid > div:first-child, .btn-row, .app-shell > .nav{ display:none !important; }
+    #updateBanner{ display:none !important; }
     body, .app-shell, .main{ background:#fff !important; margin:0; padding:0; }
     .preview-wrap{ background:#fff !important; padding:0; border-radius:0; sticky:none; position:static; }
     .invoice-paper{ box-shadow:none; margin:0; max-width:100%; width:100%; padding:0; }
@@ -363,6 +364,11 @@
 <link rel="apple-touch-icon" href="./icon.png">
 </head>
 <body>
+<div id="updateBanner" style="display:none; position:sticky; top:0; z-index:9999; background:#c98a2c; color:#fff; padding:11px 14px; font-size:13.5px; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; box-shadow:0 2px 8px rgba(0,0,0,.2);">
+  <span>🆕 新しいバージョンがあります</span>
+  <button id="updateNowBtn" style="all:unset; cursor:pointer; background:#fff; color:#2f4131; font-weight:700; padding:6px 14px; border-radius:6px; font-size:13px;">今すぐ更新</button>
+  <button id="updateLaterBtn" style="all:unset; cursor:pointer; color:#fff; opacity:.85; font-size:12px; text-decoration:underline;">後で</button>
+</div>
 <div class="app-shell">
 
   <nav class="nav">
@@ -632,6 +638,53 @@
 <script>
 (function(){
   "use strict";
+
+  const APP_VERSION = "20260707-01"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
+
+  // ---------- アップデートチェック ----------
+  let latestKnownVersion = APP_VERSION;
+  async function checkForUpdate(){
+    try{
+      const res = await fetch(location.href.split("#")[0].split("?")[0], {cache:"no-store"});
+      if(!res.ok) return;
+      const text = await res.text();
+      const m = text.match(/APP_VERSION\s*=\s*["']([^"']+)["']/);
+      if(m && m[1] && m[1] !== APP_VERSION){
+        latestKnownVersion = m[1];
+        const dismissed = sessionStorage.getItem("invoiceapp_update_dismissed");
+        if(dismissed !== latestKnownVersion){
+          showUpdateBanner();
+        }
+      }
+    }catch(e){
+      // オフライン等はチェックできないので黙って無視
+    }
+  }
+
+  function showUpdateBanner(){
+    document.getElementById("updateBanner").style.display = "flex";
+  }
+  function hideUpdateBanner(){
+    document.getElementById("updateBanner").style.display = "none";
+  }
+
+  document.getElementById("updateNowBtn").addEventListener("click", ()=>{
+    // キャッシュを回避して確実に最新版を取得しなおす
+    const url = location.pathname + "?_=" + Date.now();
+    window.location.href = url;
+  });
+  document.getElementById("updateLaterBtn").addEventListener("click", ()=>{
+    sessionStorage.setItem("invoiceapp_update_dismissed", latestKnownVersion);
+    hideUpdateBanner();
+  });
+
+  // 起動時、および他タブ/ホーム画面から戻ってきた時にチェック
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState === "visible") checkForUpdate();
+  });
+  window.addEventListener("pageshow", ()=>checkForUpdate());
+
 
   const LS_SETTINGS = "invoiceapp_settings_v1";
   const LS_HISTORY  = "invoiceapp_history_v1";
@@ -1279,6 +1332,7 @@
     renderPreview();
     renderClientDatalist();
     renderItemDatalist();
+    checkForUpdate();
   }
   init();
 
