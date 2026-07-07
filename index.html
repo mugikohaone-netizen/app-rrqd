@@ -160,10 +160,14 @@
   .col-unit{ width:12%; }
   .col-price{ width:18%; }
   .col-tax{ width:16%; }
-  .col-del{ width:10%; text-align:center; }
+  .col-del{ width:12%; text-align:center; white-space:nowrap; }
   .btn-del-row{
     all:unset; cursor:pointer; color:var(--clay);
     font-size:18px; line-height:1; padding:6px;
+  }
+  .btn-reg-row{
+    all:unset; cursor:pointer; color:var(--harvest);
+    font-size:16px; line-height:1; padding:6px;
   }
   .btn-add-row{
     all:unset; cursor:pointer;
@@ -274,12 +278,77 @@
   }
   .empty{ color:var(--sub); font-size:13.5px; padding:20px 0; text-align:center; }
 
+  /* ---------- スマホ向け ---------- */
+  @media (max-width: 720px){
+    .app-shell{ flex-direction:column; }
+    .nav{
+      width:100%;
+      flex-direction:row;
+      align-items:center;
+      padding:8px 6px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      gap:2px;
+      position:sticky; top:0; z-index:20;
+    }
+    .nav h1, .nav .tagline, .nav .spacer, .nav .footnote{ display:none; }
+    .nav button{
+      padding:9px 13px;
+      font-size:12.5px;
+      white-space:nowrap;
+      border-left:none;
+      border-bottom:3px solid transparent;
+      border-radius:6px 6px 0 0;
+    }
+    .nav button.active{
+      border-left:none;
+      border-bottom:3px solid var(--harvest);
+    }
+    .main{ padding:16px 12px 60px; }
+    .card{ padding:16px 15px; }
+    .row2, .row3{ grid-template-columns:1fr; }
+    .preview-wrap{ padding:20px 12px; }
+    .invoice-paper{ padding:28px 18px; }
+    .inv-title{ font-size:22px; }
+
+    /* 明細を1行1カード表示に */
+    .items-table thead{ display:none; }
+    .items-table, .items-table tbody, .items-table tr, .items-table td{
+      display:block; width:100%;
+    }
+    .items-table tr{
+      border:1px solid var(--paper-line);
+      border-radius:8px;
+      padding:10px 12px 6px;
+      margin-bottom:12px;
+      background:#fdfcf9;
+    }
+    .items-table td{ padding:6px 0; }
+    .items-table td[data-label]::before{
+      content: attr(data-label);
+      display:block;
+      font-size:11px;
+      color:var(--sub);
+      margin-bottom:3px;
+    }
+    .col-del{
+      display:flex; justify-content:flex-end; gap:18px;
+      border-top:1px solid var(--paper-line);
+      margin-top:6px; padding-top:8px;
+    }
+    .col-del button{ font-size:22px; padding:4px 10px; }
+
+    .history-item{ flex-wrap:wrap; gap:8px; }
+    .history-item .hi-actions{ margin-left:0; }
+  }
+
   /* ---------- 印刷/PDF用 ---------- */
   @media print{
+    @page{ size: A4; margin: 12mm; }
     .nav, .panel-grid > div:first-child, .btn-row, .app-shell > .nav{ display:none !important; }
     body, .app-shell, .main{ background:#fff !important; margin:0; padding:0; }
     .preview-wrap{ background:#fff !important; padding:0; border-radius:0; sticky:none; position:static; }
-    .invoice-paper{ box-shadow:none; margin:0; max-width:100%; }
+    .invoice-paper{ box-shadow:none; margin:0; max-width:100%; width:100%; padding:0; }
     .panel-grid{ display:block; }
   }
 </style>
@@ -293,6 +362,7 @@
     <p class="tagline">直売所の請求書をさくっと</p>
     <button class="nav-btn active" data-view="create">📝 請求書作成</button>
     <button class="nav-btn" data-view="clients">📇 宛先帳</button>
+    <button class="nav-btn" data-view="products">🥕 商品帳</button>
     <button class="nav-btn" data-view="settings">⚙️ 発行者設定</button>
     <button class="nav-btn" data-view="history">📚 履歴</button>
     <div class="spacer"></div>
@@ -309,8 +379,8 @@
             <h2>宛先・日付</h2>
             <div class="field">
               <label>宛先(相手先名)</label>
-              <div style="display:flex; gap:8px;">
-                <input type="text" id="clientName" list="clientDatalist" placeholder="例）〇〇様、株式会社〇〇 御中" style="flex:1;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <input type="text" id="clientName" list="clientDatalist" placeholder="例）〇〇様、株式会社〇〇 御中" style="flex:1; min-width:180px;">
                 <button class="btn-add-row" id="registerClientBtn" type="button" style="white-space:nowrap;">☆ 宛先帳に登録</button>
               </div>
               <datalist id="clientDatalist"></datalist>
@@ -353,6 +423,7 @@
               <tbody id="itemsBody"></tbody>
             </table>
             <button class="btn-add-row" id="addRowBtn">＋ 品目を追加</button>
+            <datalist id="itemDatalist"></datalist>
           </div>
 
           <div class="card">
@@ -436,6 +507,30 @@
       </div>
     </section>
 
+    <!-- ========== 商品帳 ========== -->
+    <section class="view" id="view-products">
+      <div class="card" style="max-width:640px;">
+        <h2>商品の登録</h2>
+        <div class="field"><label>品目名</label><input type="text" id="newProdName" placeholder="例）米粉"></div>
+        <div class="row3">
+          <div class="field"><label>単位</label><input type="text" id="newProdUnit" placeholder="個/kg"></div>
+          <div class="field"><label>単価</label><input type="number" id="newProdPrice" min="0" step="1"></div>
+          <div class="field">
+            <label>税率</label>
+            <select id="newProdTax">
+              <option value="8">8%(軽減)</option>
+              <option value="10">10%</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="addProductBtn" type="button">＋ 商品帳に追加</button>
+      </div>
+      <div class="card">
+        <h2>登録済みの商品</h2>
+        <div class="history-list" id="productList"></div>
+      </div>
+    </section>
+
     <!-- ========== 発行者設定 ========== -->
     <section class="view" id="view-settings">
       <div class="card" style="max-width:640px;">
@@ -510,6 +605,7 @@
   const LS_SETTINGS = "invoiceapp_settings_v1";
   const LS_HISTORY  = "invoiceapp_history_v1";
   const LS_CLIENTS  = "invoiceapp_clients_v1";
+  const LS_PRODUCTS = "invoiceapp_products_v1";
   const TAX_RATES = [8, 10];
 
   // ---------- ナビ切替 ----------
@@ -521,6 +617,7 @@
       document.getElementById("view-"+btn.dataset.view).classList.add("active");
       if(btn.dataset.view === "history") renderHistoryList();
       if(btn.dataset.view === "clients") renderClientList();
+      if(btn.dataset.view === "products") renderProductList();
     });
   });
 
@@ -615,21 +712,51 @@
     data = data || {name:"", qty:1, unit:"", price:0, tax:8};
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="col-name"><input type="text" class="it-name" value="${escapeAttr(data.name)}" placeholder="例）トマト"></td>
-      <td class="col-qty"><input type="number" class="it-qty" value="${data.qty}" min="0" step="1"></td>
-      <td class="col-unit"><input type="text" class="it-unit" value="${escapeAttr(data.unit)}" placeholder="個/kg"></td>
-      <td class="col-price"><input type="number" class="it-price" value="${data.price}" min="0" step="1"></td>
-      <td class="col-tax">
+      <td class="col-name" data-label="品目"><input type="text" class="it-name" list="itemDatalist" value="${escapeAttr(data.name)}" placeholder="例）米粉"></td>
+      <td class="col-qty" data-label="数量"><input type="number" class="it-qty" value="${data.qty}" min="0" step="1"></td>
+      <td class="col-unit" data-label="単位"><input type="text" class="it-unit" value="${escapeAttr(data.unit)}" placeholder="個/kg"></td>
+      <td class="col-price" data-label="単価"><input type="number" class="it-price" value="${data.price}" min="0" step="1"></td>
+      <td class="col-tax" data-label="税率">
         <select class="it-tax">
           <option value="8" ${data.tax==8?"selected":""}>8%(軽減)</option>
           <option value="10" ${data.tax==10?"selected":""}>10%</option>
         </select>
       </td>
-      <td class="col-del"><button class="btn-del-row" title="削除">✕</button></td>
+      <td class="col-del">
+        <button class="btn-reg-row" title="商品帳に登録">☆</button>
+        <button class="btn-del-row" title="削除">✕</button>
+      </td>
     `;
     tr.querySelectorAll("input, select").forEach(el=>{
       el.addEventListener("input", renderPreview);
       el.addEventListener("change", renderPreview);
+    });
+    tr.querySelector(".it-name").addEventListener("change", ()=>{
+      const nameVal = tr.querySelector(".it-name").value.trim();
+      const product = loadProducts().find(p => p.name === nameVal);
+      if(product){
+        tr.querySelector(".it-unit").value = product.unit || "";
+        tr.querySelector(".it-price").value = product.price || 0;
+        tr.querySelector(".it-tax").value = product.tax || 8;
+        renderPreview();
+      }
+    });
+    tr.querySelector(".btn-reg-row").addEventListener("click", ()=>{
+      const name = tr.querySelector(".it-name").value.trim();
+      if(!name){
+        alert("品目名を入力してから登録してください。");
+        return;
+      }
+      const product = {
+        name,
+        unit: tr.querySelector(".it-unit").value.trim(),
+        price: parseFloat(tr.querySelector(".it-price").value) || 0,
+        tax: parseInt(tr.querySelector(".it-tax").value)
+      };
+      const added = addProduct(product);
+      const msg = document.getElementById("saveMsg");
+      msg.textContent = added ? `「${name}」を商品帳に登録しました。` : `「${name}」は更新して登録しました。`;
+      setTimeout(()=>msg.textContent="", 2500);
     });
     tr.querySelector(".btn-del-row").addEventListener("click", ()=>{
       tr.remove();
@@ -750,6 +877,80 @@
   // 入力欄の変更監視
   ["clientName","invoiceNo","issueDate","dueDate","subject","lede","memo"].forEach(id=>{
     document.getElementById(id).addEventListener("input", renderPreview);
+  });
+
+  // ---------- 商品帳 ----------
+  function loadProducts(){
+    try{ return JSON.parse(localStorage.getItem(LS_PRODUCTS)) || []; }catch(e){ return []; }
+  }
+  function saveProducts(list){ localStorage.setItem(LS_PRODUCTS, JSON.stringify(list)); }
+
+  function addProduct(product){
+    const list = loadProducts();
+    const idx = list.findIndex(p => p.name === product.name);
+    const isNew = idx === -1;
+    if(isNew){
+      list.unshift({ id: uid(), ...product });
+    }else{
+      list[idx] = { ...list[idx], ...product }; // 同名は内容を更新
+    }
+    saveProducts(list);
+    renderItemDatalist();
+    return isNew;
+  }
+
+  function renderItemDatalist(){
+    const dl = document.getElementById("itemDatalist");
+    dl.innerHTML = loadProducts().map(p => `<option value="${escapeAttr(p.name)}">`).join("");
+  }
+
+  function renderProductList(){
+    const list = loadProducts();
+    const box = document.getElementById("productList");
+    if(list.length === 0){
+      box.innerHTML = `<div class="empty">まだ商品が登録されていません。</div>`;
+      return;
+    }
+    box.innerHTML = "";
+    list.forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "history-item";
+      div.innerHTML = `
+        <div class="hi-main">
+          <b>${escapeHtml(p.name)}</b>
+          <div>${yen(p.price)}${p.unit?escapeHtml(" / "+p.unit):""}　税率${p.tax}%</div>
+        </div>
+        <div class="hi-actions">
+          <button class="btn-outline" data-act="del" style="color:#a8482f;border-color:#a8482f;">削除</button>
+        </div>
+      `;
+      div.querySelector('[data-act="del"]').addEventListener("click", ()=>{
+        if(confirm(`「${p.name}」を商品帳から削除しますか？`)){
+          saveProducts(loadProducts().filter(x=>x.id!==p.id));
+          renderItemDatalist();
+          renderProductList();
+        }
+      });
+      box.appendChild(div);
+    });
+  }
+
+  document.getElementById("addProductBtn").addEventListener("click", ()=>{
+    const name = document.getElementById("newProdName").value.trim();
+    if(!name){
+      alert("品目名を入力してください。");
+      return;
+    }
+    addProduct({
+      name,
+      unit: document.getElementById("newProdUnit").value.trim(),
+      price: parseFloat(document.getElementById("newProdPrice").value) || 0,
+      tax: parseInt(document.getElementById("newProdTax").value)
+    });
+    document.getElementById("newProdName").value = "";
+    document.getElementById("newProdUnit").value = "";
+    document.getElementById("newProdPrice").value = "";
+    renderProductList();
   });
 
   // ---------- 宛先帳 ----------
@@ -959,6 +1160,7 @@
     addItemRow();
     renderPreview();
     renderClientDatalist();
+    renderItemDatalist();
   }
   init();
 
