@@ -409,13 +409,20 @@
 
           <div class="card">
             <h2>明細</h2>
+            <div class="field" style="max-width:260px;">
+              <label>単価の入力方法</label>
+              <select id="priceMode">
+                <option value="excl">税抜（本体価格）で入力</option>
+                <option value="incl">税込で入力</option>
+              </select>
+            </div>
             <table class="items-table">
               <thead>
                 <tr>
                   <th class="col-name">品目</th>
                   <th class="col-qty">数量</th>
                   <th class="col-unit">単位</th>
-                  <th class="col-price">単価</th>
+                  <th class="col-price" id="th-price-input">単価(税抜)</th>
                   <th class="col-tax">税率</th>
                   <th class="col-del"></th>
                 </tr>
@@ -472,7 +479,7 @@
             <table class="inv-items">
               <thead>
                 <tr>
-                  <th>品目</th><th class="num">数量</th><th class="num">単価</th><th class="num">税率</th><th class="num">金額</th>
+                  <th>品目</th><th class="num">数量</th><th class="num" id="th-price-preview">単価</th><th class="num">税率</th><th class="num" id="th-amount-preview">金額</th>
                 </tr>
               </thead>
               <tbody id="pv-itemsbody"></tbody>
@@ -550,6 +557,13 @@
           <input type="text" id="s_regno" placeholder="例）T1234567890123">
         </div>
         <div class="hint">未登録・免税事業者の場合は空欄のままでOK。空欄なら請求書に表示されません。</div>
+        <div class="field" style="max-width:280px;">
+          <label>単価の既定入力方式(新規作成時)</label>
+          <select id="s_priceMode">
+            <option value="excl">税抜（本体価格）で入力</option>
+            <option value="incl">税込で入力</option>
+          </select>
+        </div>
       </div>
 
       <div class="card" style="max-width:640px;">
@@ -650,6 +664,7 @@
     document.getElementById("s_accountType").value = s.accountType || "普通";
     document.getElementById("s_accountNumber").value = s.accountNumber || "";
     document.getElementById("s_accountHolder").value = s.accountHolder || "";
+    document.getElementById("s_priceMode").value = s.priceMode || "excl";
     renderSealPreview(s.sealImage || "");
   }
 
@@ -668,6 +683,7 @@
       accountType: document.getElementById("s_accountType").value,
       accountNumber: document.getElementById("s_accountNumber").value.trim(),
       accountHolder: document.getElementById("s_accountHolder").value.trim(),
+      priceMode: document.getElementById("s_priceMode").value,
       sealImage: prev.sealImage || ""
     };
   }
@@ -790,6 +806,18 @@
     return `${today}-${seq}`;
   }
 
+  function updatePriceModeLabels(){
+    const mode = document.getElementById("priceMode").value;
+    const isIncl = mode === "incl";
+    document.getElementById("th-price-input").textContent = isIncl ? "単価(税込)" : "単価(税抜)";
+    document.getElementById("th-price-preview").textContent = isIncl ? "単価(税込)" : "単価(税抜)";
+    document.getElementById("th-amount-preview").textContent = isIncl ? "金額(税込)" : "金額(税抜)";
+  }
+  document.getElementById("priceMode").addEventListener("change", ()=>{
+    updatePriceModeLabels();
+    renderPreview();
+  });
+
   // ---------- プレビュー描画 ----------
   function renderPreview(){
     const s = loadSettings();
@@ -801,6 +829,8 @@
     const lede = document.getElementById("lede").value.trim();
     const memo = document.getElementById("memo").value.trim();
     const items = getItems();
+    const priceMode = document.getElementById("priceMode").value; // 'excl' or 'incl'
+    const isIncl = priceMode === "incl";
 
     document.getElementById("pv-client").textContent = client ? (client) : "相手先名";
     document.getElementById("pv-invno").textContent = invNo || "—";
@@ -845,11 +875,20 @@
     let grandTotal = 0;
     const summaryRows = [];
     TAX_RATES.forEach(rate=>{
-      const subtotal = taxGroups[rate] || 0;
-      if(subtotal <= 0) return;
-      const tax = Math.round(subtotal * rate / 100);
-      grandTotal += subtotal + tax;
-      summaryRows.push(`<tr><td class="label">${rate}%対象 小計</td><td class="val">${yen(subtotal)}</td></tr>`);
+      const groupAmount = taxGroups[rate] || 0;
+      if(groupAmount <= 0) return;
+      let subtotal, tax;
+      if(isIncl){
+        // 税込金額から消費税額を逆算(税率ごとに1回丸め)
+        tax = Math.round(groupAmount * rate / (100 + rate));
+        subtotal = groupAmount - tax;
+        grandTotal += groupAmount;
+      }else{
+        subtotal = groupAmount;
+        tax = Math.round(subtotal * rate / 100);
+        grandTotal += subtotal + tax;
+      }
+      summaryRows.push(`<tr><td class="label">${rate}%対象 小計(税抜)</td><td class="val">${yen(subtotal)}</td></tr>`);
       summaryRows.push(`<tr><td class="label">消費税(${rate}%)</td><td class="val">${yen(tax)}</td></tr>`);
     });
     summaryRows.push(`<tr class="grand"><td class="label">合計</td><td class="val">${yen(grandTotal)}</td></tr>`);
@@ -871,7 +910,7 @@
     // 備考
     document.getElementById("pv-memo").textContent = memo || "";
 
-    return {client, invNo, issue, due, subject, lede, memo, items, grandTotal};
+    return {client, invNo, issue, due, subject, lede, memo, items, grandTotal, priceMode};
   }
 
   // 入力欄の変更監視
@@ -1050,6 +1089,7 @@
       lede: data.lede,
       memo: data.memo,
       items: data.items,
+      priceMode: data.priceMode,
       grandTotal: data.grandTotal,
       savedAt: new Date().toISOString()
     };
@@ -1115,6 +1155,8 @@
     document.getElementById("subject").value = inv.subject || "";
     document.getElementById("lede").value = inv.lede || "上記の通りご請求申し上げます。";
     document.getElementById("memo").value = inv.memo || "";
+    document.getElementById("priceMode").value = inv.priceMode || "excl";
+    updatePriceModeLabels();
     document.getElementById("itemsBody").innerHTML = "";
     (inv.items && inv.items.length ? inv.items : [{name:"",qty:1,unit:"",price:0,tax:8}]).forEach(addItemRow);
     renderPreview();
@@ -1154,9 +1196,12 @@
 
   // ---------- 初期化 ----------
   function init(){
-    fillSettingsForm(loadSettings());
+    const s = loadSettings();
+    fillSettingsForm(s);
     document.getElementById("issueDate").value = todayStr();
     document.getElementById("invoiceNo").value = suggestInvoiceNo();
+    document.getElementById("priceMode").value = s.priceMode || "excl";
+    updatePriceModeLabels();
     addItemRow();
     renderPreview();
     renderClientDatalist();
