@@ -233,8 +233,12 @@
     color:var(--moss-dark);
   }
   .inv-top{ display:flex; justify-content:space-between; margin-bottom:22px; gap:20px; }
-  .inv-to{ font-size:16px; }
-  .inv-to .name{ font-size:18px; font-weight:700; border-bottom:1.5px solid var(--ink); display:inline-block; padding-bottom:3px; margin-bottom:6px;}
+  .inv-to{ font-size:16px; max-width:60%; }
+  .inv-to .name{
+    font-size:18px; font-weight:700; border-bottom:1.5px solid var(--ink);
+    display:inline; padding-bottom:3px; margin-bottom:6px; line-height:1.6;
+    -webkit-box-decoration-break:clone; box-decoration-break:clone;
+  }
   .inv-meta{ text-align:right; font-size:13px; color:var(--sub); line-height:2; }
   .inv-meta b{ color:var(--ink); }
   .inv-from{
@@ -639,7 +643,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260707-01"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-01"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
@@ -1221,9 +1225,26 @@
   }
 
   // ---------- 印刷 / PDF ----------
+  function applyPrintFitScale(){
+    const paper = document.getElementById("invoicePaper");
+    paper.style.zoom = "";
+    // A4(297mm) - @pageの余白(12mm×2) を96dpiのpxに換算した目安の高さ
+    const targetHeightPx = 1030;
+    const targetWidthPx = 715;
+    const naturalHeight = paper.scrollHeight;
+    const naturalWidth = paper.scrollWidth;
+    const scale = Math.min(targetHeightPx / naturalHeight, targetWidthPx / naturalWidth, 1);
+    paper.style.zoom = scale < 1 ? scale.toFixed(3) : "";
+  }
+  function resetPrintFitScale(){
+    document.getElementById("invoicePaper").style.zoom = "";
+  }
+
   document.getElementById("printBtn").addEventListener("click", ()=>{
+    applyPrintFitScale();
     window.print();
   });
+  window.addEventListener("afterprint", resetPrintFitScale);
 
   document.getElementById("pdfBtn").addEventListener("click", async ()=>{
     const btn = document.getElementById("pdfBtn");
@@ -1237,10 +1258,18 @@
       const pdf = new jsPDF({unit:"mm", format:"a4"});
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      const imgW = pageW - 20;
-      const imgH = canvas.height * imgW / canvas.width;
-      const y = imgH < pageH-20 ? (pageH-imgH)/2 : 10;
-      pdf.addImage(imgData, "PNG", 10, y, imgW, Math.min(imgH, pageH-20));
+      const maxW = pageW - 20; // 左右10mmずつ余白
+      const maxH = pageH - 20; // 上下10mmずつ余白
+      // 縦横比を保ったまま、どれだけ文字数が増えてもA4の1ページにきっちり収まるよう縮小する
+      let imgW = maxW;
+      let imgH = canvas.height * imgW / canvas.width;
+      if(imgH > maxH){
+        imgH = maxH;
+        imgW = canvas.width * imgH / canvas.height;
+      }
+      const x = (pageW - imgW) / 2;
+      const y = (pageH - imgH) / 2;
+      pdf.addImage(imgData, "PNG", x, y, imgW, imgH);
       const client = document.getElementById("clientName").value.trim() || "請求書";
       const issue = document.getElementById("issueDate").value || todayStr();
       pdf.save(`請求書_${client}_${issue}.pdf`);
