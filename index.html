@@ -391,11 +391,10 @@
     .main{ padding:0 !important; }
     .preview-wrap{ background:#fff !important; padding:0 !important; border-radius:0; position:static; }
     /* 画面幅に関係なく、A4の印刷可能幅(210-12×2=186mm)いっぱいにレイアウトし直す */
-    .invoice-paper{ box-shadow:none; margin:0; width:186mm !important; max-width:186mm !important; }
+    .invoice-paper{ box-shadow:none; margin:0; width:186mm !important; max-width:186mm !important; background:#fff !important; }
     .invoice-paper-inner{ padding:0 !important; }
     /* スマホ用の1品目1カード表示を解除し、通常の表レイアウトで印刷 */
     .panel-grid{ display:block; }
-  }
   }
 </style>
 <link rel="apple-touch-icon" href="./icon.png">
@@ -680,7 +679,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260709-09"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-10"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
