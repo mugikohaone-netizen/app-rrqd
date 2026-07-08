@@ -680,7 +680,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260709-03"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-04"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
@@ -1013,12 +1013,19 @@
     bankBox.style.display = bankLines.length ? "block" : "none";
 
     // 印鑑
-    document.getElementById("pv-sealwrap").innerHTML = s.sealImage ? `<img src="${s.sealImage}">` : "";
+    const sealWrap = document.getElementById("pv-sealwrap");
+    sealWrap.innerHTML = s.sealImage ? `<img src="${s.sealImage}">` : "";
+    const sealImgEl = sealWrap.querySelector("img");
+    if(sealImgEl && !sealImgEl.complete){
+      sealImgEl.addEventListener("load", fitPreviewToFrame, {once:true});
+    }
 
     // 備考
     document.getElementById("pv-memo").textContent = memo || "";
 
     fitPreviewToFrame();
+    // レイアウト確定後(画像デコード等)にもう一度だけ再計算して念のため取りこぼしを防ぐ
+    requestAnimationFrame(()=>requestAnimationFrame(fitPreviewToFrame));
     return {client, invNo, issue, due, subject, lede, memo, items, grandTotal};
   }
 
@@ -1275,7 +1282,9 @@
     inner.style.zoom = "";
     const natural = inner.scrollHeight;
     if(natural <= 0) return;
-    const scale = Math.min(maxHeightPx / natural, 1);
+    // フォント読み込み等による微妙な誤差で切れないよう、少し余裕を持たせる
+    const safeMax = maxHeightPx * 0.97;
+    const scale = Math.min(safeMax / natural, 1);
     inner.style.zoom = scale < 1 ? scale.toFixed(3) : "";
   }
 
@@ -1421,6 +1430,16 @@
     renderClientDatalist();
     renderItemDatalist();
     checkForUpdate();
+
+    // Webフォント読み込み完了後、高さが変わっている可能性があるので再計算
+    if(document.fonts && document.fonts.ready){
+      document.fonts.ready.then(()=>{
+        fitPreviewToFrame();
+        setTimeout(fitPreviewToFrame, 300); // 念のためもう一度
+      });
+    }else{
+      setTimeout(fitPreviewToFrame, 500);
+    }
   }
   init();
 
