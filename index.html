@@ -396,7 +396,7 @@
     body, .app-shell, .main{ background:#fff !important; margin:0; padding:0; }
     .preview-wrap{ background:#fff !important; padding:0; border-radius:0; sticky:none; position:static; }
     .invoice-paper{ box-shadow:none; margin:0; max-width:100%; width:100%; overflow:visible; aspect-ratio:auto; height:auto; }
-    .invoice-paper-inner{ padding:0; position:static; width:auto; transform-origin: top center; }
+    .invoice-paper-inner{ padding:0; position:static; width:auto; zoom:0.85; }
     .panel-grid{ display:block; }
   }
 </style>
@@ -682,7 +682,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260709-06"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-07"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
