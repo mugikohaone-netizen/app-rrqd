@@ -246,8 +246,10 @@
     position:relative;
   }
   .invoice-paper-inner{
+    position:absolute;
+    top:0; left:0;
+    width:100%;
     padding:44px 48px;
-    height:100%;
     box-sizing:border-box;
     transform-origin: top left;
   }
@@ -680,7 +682,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260709-04"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-05"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
@@ -1279,13 +1281,13 @@
 
   // ---------- 印刷 / PDF / A4フィット共通処理 ----------
   function fitInvoiceContent(inner, maxHeightPx){
-    inner.style.zoom = "";
-    const natural = inner.scrollHeight;
+    // offsetHeightはtransformの影響を受けないため、リセットせずそのまま自然な高さを測れる
+    const natural = inner.offsetHeight;
     if(natural <= 0) return;
     // フォント読み込み等による微妙な誤差で切れないよう、少し余裕を持たせる
     const safeMax = maxHeightPx * 0.97;
     const scale = Math.min(safeMax / natural, 1);
-    inner.style.zoom = scale < 1 ? scale.toFixed(3) : "";
+    inner.style.transform = scale < 1 ? `scale(${scale.toFixed(4)})` : "";
   }
 
   function fitPreviewToFrame(){
