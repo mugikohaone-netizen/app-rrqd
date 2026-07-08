@@ -395,8 +395,8 @@
     #updateBanner{ display:none !important; }
     body, .app-shell, .main{ background:#fff !important; margin:0; padding:0; }
     .preview-wrap{ background:#fff !important; padding:0; border-radius:0; sticky:none; position:static; }
-    .invoice-paper{ box-shadow:none; margin:0; max-width:100%; width:100%; overflow:visible; }
-    .invoice-paper-inner{ padding:0; }
+    .invoice-paper{ box-shadow:none; margin:0; max-width:100%; width:100%; overflow:visible; aspect-ratio:auto; height:auto; }
+    .invoice-paper-inner{ padding:0; position:static; width:auto; transform-origin: top center; }
     .panel-grid{ display:block; }
   }
 </style>
@@ -682,7 +682,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260709-05"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-06"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
@@ -1298,14 +1298,8 @@
     fitInvoiceContent(inner, frame.clientHeight);
   }
 
-  function applyPrintFitScale(){
-    const inner = document.getElementById("invoicePaperInner");
-    // A4(297mm) - @pageの余白(12mm×2) を96dpiのpxに換算した目安の高さ
-    fitInvoiceContent(inner, 1030);
-  }
-
   document.getElementById("printBtn").addEventListener("click", ()=>{
-    applyPrintFitScale();
+    // 印刷は自然なページ送りに任せる(無理に1枚へ縮めようとして中身が消えるのを防ぐため)
     window.print();
   });
   window.addEventListener("afterprint", fitPreviewToFrame);
@@ -1320,9 +1314,21 @@
     const btn = document.getElementById("pdfBtn");
     const orig = btn.textContent;
     btn.textContent = "作成中…";
+    const inner = document.getElementById("invoicePaperInner");
+    const frame = document.getElementById("invoicePaper");
+    const savedTransform = inner.style.transform;
+    const savedFrameOverflow = frame.style.overflow;
+    const savedFrameAspect = frame.style.aspectRatio;
     try{
-      const el = document.getElementById("invoicePaper");
-      const canvas = await html2canvas(el, {scale:2, backgroundColor:"#faf8f1"});
+      // A4枠のoverflow/transformの影響を受けないよう、内側コンテンツを自然な大きさで直接キャプチャする
+      inner.style.transform = "";
+      inner.style.position = "static";
+      inner.style.width = "auto";
+      frame.style.overflow = "visible";
+      frame.style.aspectRatio = "auto";
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(inner, {scale:2, backgroundColor:"#faf8f1"});
       const imgData = canvas.toDataURL("image/png");
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({unit:"mm", format:"a4"});
@@ -1330,7 +1336,7 @@
       const pageH = pdf.internal.pageSize.getHeight();
       const maxW = pageW - 20; // 左右10mmずつ余白
       const maxH = pageH - 20; // 上下10mmずつ余白
-      // invoicePaperは既にA4比率固定なので基本はぴったり収まるが、念のため縦横比を保ったまま調整
+      // 縦横比を保ったまま、必ずA4の1ページにきっちり収まるよう縮小する
       let imgW = maxW;
       let imgH = canvas.height * imgW / canvas.width;
       if(imgH > maxH){
@@ -1347,6 +1353,13 @@
       alert("PDF作成に失敗しました。印刷ボタンからブラウザの印刷機能で「PDFとして保存」もお試しください。");
       console.error(err);
     }finally{
+      // 画面表示用のスタイルを元に戻す
+      inner.style.position = "";
+      inner.style.width = "";
+      inner.style.transform = savedTransform;
+      frame.style.overflow = savedFrameOverflow;
+      frame.style.aspectRatio = savedFrameAspect;
+      fitPreviewToFrame();
       btn.textContent = orig;
     }
   });
