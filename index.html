@@ -98,7 +98,7 @@
     gap:28px;
     align-items:start;
   }
-  @media (max-width: 980px){
+  @media screen and (max-width: 980px){
     .panel-grid{ grid-template-columns: 1fr; }
   }
 
@@ -237,21 +237,14 @@
     width:100%;
     max-width:720px;
     margin:0 auto;
-    aspect-ratio: 210 / 297; /* A4比率を常に維持 */
-    overflow:hidden;
     box-shadow:0 10px 30px rgba(0,0,0,.25);
     border-radius:2px;
     font-family:'Zen Kaku Gothic New', sans-serif;
     color:var(--ink);
-    position:relative;
   }
   .invoice-paper-inner{
-    position:absolute;
-    top:0; left:0;
-    width:100%;
     padding:44px 48px;
     box-sizing:border-box;
-    transform-origin: top left;
   }
   .inv-title{
     font-family:'Shippori Mincho', serif;
@@ -325,7 +318,7 @@
   .empty{ color:var(--sub); font-size:13.5px; padding:20px 0; text-align:center; }
 
   /* ---------- スマホ向け ---------- */
-  @media (max-width: 720px){
+  @media screen and (max-width: 720px){
     .app-shell{ flex-direction:column; }
     .nav{
       width:100%;
@@ -390,14 +383,19 @@
 
   /* ---------- 印刷/PDF用 ---------- */
   @media print{
-    @page{ size: A4; margin: 12mm; }
+    @page{ size: A4 portrait; margin: 12mm; }
     .nav, .panel-grid > div:first-child, .btn-row, .app-shell > .nav{ display:none !important; }
     #updateBanner{ display:none !important; }
-    body, .app-shell, .main{ background:#fff !important; margin:0; padding:0; }
-    .preview-wrap{ background:#fff !important; padding:0; border-radius:0; sticky:none; position:static; }
-    .invoice-paper{ box-shadow:none; margin:0; max-width:100%; width:100%; overflow:visible; aspect-ratio:auto; height:auto; }
-    .invoice-paper-inner{ padding:0; position:static; width:auto; zoom:0.85; }
+    html, body{ width:186mm; overflow:visible; }
+    body, .app-shell, .main{ background:#fff !important; margin:0; padding:0; max-width:none; }
+    .main{ padding:0 !important; }
+    .preview-wrap{ background:#fff !important; padding:0 !important; border-radius:0; position:static; }
+    /* 画面幅に関係なく、A4の印刷可能幅(210-12×2=186mm)いっぱいにレイアウトし直す */
+    .invoice-paper{ box-shadow:none; margin:0; width:186mm !important; max-width:186mm !important; }
+    .invoice-paper-inner{ padding:0 !important; }
+    /* スマホ用の1品目1カード表示を解除し、通常の表レイアウトで印刷 */
     .panel-grid{ display:block; }
+  }
   }
 </style>
 <link rel="apple-touch-icon" href="./icon.png">
@@ -682,7 +680,7 @@
 (function(){
   "use strict";
 
-  const APP_VERSION = "20260709-07"; // デプロイのたびにここを変える(または任意の文字列でOK)
+  const APP_VERSION = "20260709-09"; // デプロイのたびにここを変える(または任意の文字列でOK)
   const LS_SEEN_VERSION = "invoiceapp_seen_version_v1";
 
   // ---------- アップデートチェック ----------
@@ -745,7 +743,6 @@
       if(btn.dataset.view === "history") renderHistoryList();
       if(btn.dataset.view === "clients") renderClientList();
       if(btn.dataset.view === "products") renderProductList();
-      if(btn.dataset.view === "create") setTimeout(fitPreviewToFrame, 0);
     });
   });
 
@@ -1017,17 +1014,10 @@
     // 印鑑
     const sealWrap = document.getElementById("pv-sealwrap");
     sealWrap.innerHTML = s.sealImage ? `<img src="${s.sealImage}">` : "";
-    const sealImgEl = sealWrap.querySelector("img");
-    if(sealImgEl && !sealImgEl.complete){
-      sealImgEl.addEventListener("load", fitPreviewToFrame, {once:true});
-    }
 
     // 備考
     document.getElementById("pv-memo").textContent = memo || "";
 
-    fitPreviewToFrame();
-    // レイアウト確定後(画像デコード等)にもう一度だけ再計算して念のため取りこぼしを防ぐ
-    requestAnimationFrame(()=>requestAnimationFrame(fitPreviewToFrame));
     return {client, invNo, issue, due, subject, lede, memo, items, grandTotal};
   }
 
@@ -1279,56 +1269,18 @@
     renderPreview();
   }
 
-  // ---------- 印刷 / PDF / A4フィット共通処理 ----------
-  function fitInvoiceContent(inner, maxHeightPx){
-    // offsetHeightはtransformの影響を受けないため、リセットせずそのまま自然な高さを測れる
-    const natural = inner.offsetHeight;
-    if(natural <= 0) return;
-    // フォント読み込み等による微妙な誤差で切れないよう、少し余裕を持たせる
-    const safeMax = maxHeightPx * 0.97;
-    const scale = Math.min(safeMax / natural, 1);
-    inner.style.transform = scale < 1 ? `scale(${scale.toFixed(4)})` : "";
-  }
-
-  function fitPreviewToFrame(){
-    const frame = document.getElementById("invoicePaper");
-    const inner = document.getElementById("invoicePaperInner");
-    if(!frame || !inner) return;
-    if(frame.clientHeight === 0) return; // タブが非表示の間はスキップ
-    fitInvoiceContent(inner, frame.clientHeight);
-  }
-
+  // ---------- 印刷 / PDF ----------
   document.getElementById("printBtn").addEventListener("click", ()=>{
-    // 印刷は自然なページ送りに任せる(無理に1枚へ縮めようとして中身が消えるのを防ぐため)
     window.print();
-  });
-  window.addEventListener("afterprint", fitPreviewToFrame);
-
-  let resizeTimer = null;
-  window.addEventListener("resize", ()=>{
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(fitPreviewToFrame, 150);
   });
 
   document.getElementById("pdfBtn").addEventListener("click", async ()=>{
     const btn = document.getElementById("pdfBtn");
     const orig = btn.textContent;
     btn.textContent = "作成中…";
-    const inner = document.getElementById("invoicePaperInner");
-    const frame = document.getElementById("invoicePaper");
-    const savedTransform = inner.style.transform;
-    const savedFrameOverflow = frame.style.overflow;
-    const savedFrameAspect = frame.style.aspectRatio;
     try{
-      // A4枠のoverflow/transformの影響を受けないよう、内側コンテンツを自然な大きさで直接キャプチャする
-      inner.style.transform = "";
-      inner.style.position = "static";
-      inner.style.width = "auto";
-      frame.style.overflow = "visible";
-      frame.style.aspectRatio = "auto";
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-
-      const canvas = await html2canvas(inner, {scale:2, backgroundColor:"#faf8f1"});
+      const el = document.getElementById("invoicePaper");
+      const canvas = await html2canvas(el, {scale:2, backgroundColor:"#faf8f1"});
       const imgData = canvas.toDataURL("image/png");
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({unit:"mm", format:"a4"});
@@ -1353,13 +1305,6 @@
       alert("PDF作成に失敗しました。印刷ボタンからブラウザの印刷機能で「PDFとして保存」もお試しください。");
       console.error(err);
     }finally{
-      // 画面表示用のスタイルを元に戻す
-      inner.style.position = "";
-      inner.style.width = "";
-      inner.style.transform = savedTransform;
-      frame.style.overflow = savedFrameOverflow;
-      frame.style.aspectRatio = savedFrameAspect;
-      fitPreviewToFrame();
       btn.textContent = orig;
     }
   });
@@ -1445,16 +1390,6 @@
     renderClientDatalist();
     renderItemDatalist();
     checkForUpdate();
-
-    // Webフォント読み込み完了後、高さが変わっている可能性があるので再計算
-    if(document.fonts && document.fonts.ready){
-      document.fonts.ready.then(()=>{
-        fitPreviewToFrame();
-        setTimeout(fitPreviewToFrame, 300); // 念のためもう一度
-      });
-    }else{
-      setTimeout(fitPreviewToFrame, 500);
-    }
   }
   init();
 
